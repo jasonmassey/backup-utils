@@ -13,6 +13,7 @@ This repository includes backup and recovery utilities for [GitHub Enterprise][1
 - **[Using the backup and restore commands](#using-the-backup-and-restore-commands)**
 - **[Scheduling backups](#scheduling-backups)**
 - **[Backup snapshot file structure](#backup-snapshot-file-structure)**
+- **[How does backup utilities differ from a High Availability replica?](#how-does-backup-utilities-differ-from-a-high-availability-replica)**
 - **[Support](#support)**
 
 ### Features
@@ -153,6 +154,11 @@ The `ghe-backup` and `ghe-restore` commands also have a verbose output mode
 (`-v`) that lists files as they're being transferred. It's often useful to
 enable when output is logged to a file.
 
+When restoring to an already configured GHE instance, settings and license data
+are *not* restored to prevent overwriting manual configuration on the restore
+host. This behavior can be overriden by passing the `-c` argument to `ghe-restore`,
+forcing settings and license data to be overwritten with the backup copy's data.
+
 ### Scheduling backups
 
 Regular backups should be scheduled using `cron(8)` or similar command
@@ -221,10 +227,20 @@ most recent successful snapshot:
           |- ssh-host-keys.tar
           |- strategy
           |- version
-       |- current -> 20140727T010000
+       |- current -> 20140728T010000
 
 Note: the `GHE_DATA_DIR` variable set in `backup.config` can be used to change
 the disk location where snapshots are written.
+
+### How does backup utilities differ from a High Availability replica?
+It is recommended that both backup utilities and an [High Availability replica](https://help.github.com/enterprise/admin/guides/installation/high-availability-cluster-configuration/) are used as part of a GitHub Enterprise deployment but they serve different roles.
+
+##### The purpose of the High Availability replica
+The High Availability replica is a fully redundant secondary GitHub Enterprise instance, kept in sync with the primary instance via replication of all major datastores. This active/passive cluster configuration is designed to minimize service disruption in the event of hardware failure or major network outage affecting the primary instance. Because some forms of data corruption or loss may be replicated immediately from primary to replica, it is not a replacement for the backup utilities as part of your disaster recovery plan.
+
+##### The purpose of the backup utilities
+Backup utilities are a disaster recovery tool. This tool takes date-stamped snapshots of all major datastores. These snapshots are used to restore an instance to a prior state or set up a new instance without having another always-on GitHub Enterprise instance (like the High Availability replica).
+
 
 ### Support
 
@@ -242,5 +258,5 @@ site setup or recovery, please contact our [Enterprise support team][7] instead.
 [7]: https://enterprise.github.com/support/
 [8]: https://enterprise.github.com/help/articles/backing-up-enterprise-data
 [9]: https://enterprise.github.com/help/articles/restoring-enterprise-data
-[10]: https://help.github.com/enterprise/2.0/admin-guide/migrating/
+[10]: https://help.github.com/enterprise/2.0/admin-guide/migrating-to-a-different-platform-or-from-github-enterprise-11-10-34x/
 [11]: https://help.github.com/enterprise/2.0/admin-guide/

@@ -230,7 +230,7 @@ begin_test "ghe-backup tarball strategy"
 )
 end_test
 
-begin_test "ghe-backup fails fast when other run in progress"
+begin_test "ghe-backup fails fast when old style run in progress"
 (
     set -e
 
@@ -241,6 +241,18 @@ begin_test "ghe-backup fails fast when other run in progress"
 )
 end_test
 
+begin_test "ghe-backup cleans up stale in-progress file"
+(
+    set -e
+
+    echo "20150928T153353 99999" > "$GHE_DATA_DIR/in-progress"
+    ghe-backup
+
+    [ ! -f "$GHE_DATA_DIR/in-progress" ]
+)
+end_test
+
+
 begin_test "ghe-backup without manage-password file"
 (
     set -e
@@ -249,5 +261,18 @@ begin_test "ghe-backup without manage-password file"
     ghe-backup
 
     [ ! -f "$GHE_DATA_DIR/current/manage-password" ]
+)
+end_test
+
+begin_test "ghe-backup empty hookshot directory"
+(
+  set -e
+
+  rm -rf $GHE_REMOTE_DATA_USER_DIR/hookshot/repository-*
+  rm -rf $GHE_DATA_DIR/current/hookshot/repository-*
+  ghe-backup
+
+  # Check that the "--link-dest arg does not exist" message hasn't occurred.
+  [ ! "$(grep "[l]ink-dest arg does not exist" $TRASHDIR/out)" ]
 )
 end_test
